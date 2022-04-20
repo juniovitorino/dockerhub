@@ -1,0 +1,46 @@
+version: "3.7"
+
+services:
+  search: # ElasticSearch
+    image: juniovitorino/elasticsearch:2.3.3
+    container_name: search 
+    environment:
+      - "discovery.type=single-node"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx2048m"
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - elasticsearch_storage:/usr/share/elasticsearch/data
+
+  database: # PostgreSQL
+    image: postgres:11.15
+    container_name: database
+    env_file:
+      - .env.local
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_storage:/var/lib/postgresql/data
+
+  cache: # Redis
+    image: redis:latest
+    container_name: cache
+    ports:
+      - 6379:6379
+  
+  app:
+    image: juniovitorino/ruby:2.6.9
+    container_name: app
+    ports:
+      - 3000:3000
+      - 1025:1025
+      - 1080:1080
+    depends_on:
+      - "database"
+      - "cache"
+      - "search"
+
+volumes:
+  postgres_storage:
+  elasticsearch_storage:
